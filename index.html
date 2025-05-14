@@ -1,128 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Idle Coin Clicker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f7f7f7;
-      margin-top: 50px;
-    }
+<script>
+  let coins = 0;
+  let coinsPerSecond = 0;
+  let upgradeCost = 50;
+  let lastSaveTime = Date.now();
 
-    #coin {
-      width: 100px;
-      height: 100px;
-      background: gold;
-      border-radius: 50%;
-      margin: 20px auto;
-      box-shadow: 0 0 15px #d4af37;
-      cursor: pointer;
-    }
+  function loadGame() {
+    const saved = JSON.parse(localStorage.getItem('idleClickerGame'));
+    if (saved) {
+      coins = saved.coins || 0;
+      coinsPerSecond = saved.coinsPerSecond || 0;
+      upgradeCost = saved.upgradeCost || 50;
+      lastSaveTime = saved.lastSaveTime || Date.now();
 
-    .counter {
-      font-size: 2em;
-      margin: 10px;
-    }
+      // ⏰ Offline earnings
+      const now = Date.now();
+      const secondsOffline = Math.floor((now - lastSaveTime) / 1000);
+      const offlineEarnings = coinsPerSecond * secondsOffline;
 
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-
-  <h1>💰 Idle Coin Clicker</h1>
-  <div id="coin"></div>
-  <div class="counter">Coins: <span id="coins">0</span></div>
-  <div class="counter">Coins Per Second: <span id="cps">0</span></div>
-
-  <button onclick="buyUpgrade()">Buy Upgrade (+1 CPS) - Cost: <span id="cost">50</span></button>
-  <br/>
-  <button onclick="resetGame()">Reset Game</button>
-
-  <script>
-    let coins = 0;
-    let coinsPerSecond = 0;
-    let upgradeCost = 50;
-    let lastSaveTime = Date.now();
-
-    function loadGame() {
-      const saved = JSON.parse(localStorage.getItem('idleClickerGame'));
-      if (saved) {
-        coins = saved.coins || 0;
-        coinsPerSecond = saved.coinsPerSecond || 0;
-        upgradeCost = saved.upgradeCost || 50;
-        lastSaveTime = saved.lastSaveTime || Date.now();
-
-        // Offline earnings
-        const now = Date.now();
-        const secondsOffline = Math.floor((now - lastSaveTime) / 1000);
-        const offlineEarnings = coinsPerSecond * secondsOffline;
-        if (offlineEarnings > 0) {
-          alert(`Welcome back! You earned ${offlineEarnings} coins while you were away.`);
-        }
+      if (offlineEarnings > 0) {
+        alert(`Welcome back! You earned ${offlineEarnings} coins while you were away.`);
         coins += offlineEarnings;
       }
     }
+  }
 
-    function saveGame() {
-      const gameData = {
-        coins,
-        coinsPerSecond,
-        upgradeCost,
-        lastSaveTime: Date.now()
-      };
-      localStorage.setItem('idleClickerGame', JSON.stringify(gameData));
-    }
+  function saveGame() {
+    const gameData = {
+      coins,
+      coinsPerSecond,
+      upgradeCost,
+      lastSaveTime: Date.now() // Save the time each time we save
+    };
+    localStorage.setItem('idleClickerGame', JSON.stringify(gameData));
+  }
 
-    function clickCoin() {
-      coins += 1;
+  function clickCoin() {
+    coins += 1;
+    updateDisplay();
+    saveGame();
+  }
+
+  function buyUpgrade() {
+    if (coins >= upgradeCost) {
+      coins -= upgradeCost;
+      coinsPerSecond += 1;
+      upgradeCost = Math.floor(upgradeCost * 1.5);
       updateDisplay();
       saveGame();
     }
+  }
 
-    function buyUpgrade() {
-      if (coins >= upgradeCost) {
-        coins -= upgradeCost;
-        coinsPerSecond += 1;
-        upgradeCost = Math.floor(upgradeCost * 1.5);
-        updateDisplay();
-        saveGame();
-      }
-    }
+  function updateDisplay() {
+    document.getElementById('coins').textContent = coins;
+    document.getElementById('cps').textContent = coinsPerSecond;
+    document.getElementById('cost').textContent = upgradeCost;
+  }
 
-    function updateDisplay() {
-      document.getElementById('coins').textContent = coins;
-      document.getElementById('cps').textContent = coinsPerSecond;
-      document.getElementById('cost').textContent = upgradeCost;
-    }
+  function resetGame() {
+    localStorage.removeItem('idleClickerGame');
+    coins = 0;
+    coinsPerSecond = 0;
+    upgradeCost = 50;
+    updateDisplay();
+  }
 
-    function resetGame() {
-      localStorage.removeItem('idleClickerGame');
-      coins = 0;
-      coinsPerSecond = 0;
-      upgradeCost = 50;
-      updateDisplay();
-    }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('coin').addEventListener('click', clickCoin);
+    loadGame();
+    updateDisplay();
+  });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('coin').addEventListener('click', clickCoin);
-      loadGame();
-      updateDisplay();
-    });
-
-    setInterval(() => {
-      coins += coinsPerSecond;
-      updateDisplay();
-      saveGame();
-    }, 1000);
-  </script>
-
-</body>
-</html>
+  setInterval(() => {
+    coins += coinsPerSecond;
+    updateDisplay();
+    saveGame();
+  }, 1000);
+</script>
