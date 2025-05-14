@@ -36,7 +36,6 @@
   </style>
 </head>
 <body>
-
   <h1>💰 Idle Coin Clicker</h1>
   <div id="coin"></div>
   <div class="counter">Coins: <span id="coins">0</span></div>
@@ -48,15 +47,18 @@
   <button onclick="buyCoinMultiplier()">Buy Coin Multiplier (Cost: <span id="coin-multiplier-cost">200</span>)</button>
   <button onclick="buyOfflineEarningsBoost()">Buy Offline Earnings Boost (Cost: <span id="offline-earnings-boost-cost">500</span>)</button>
   <button onclick="buyCpsBoost()">Buy CPS Boost (Cost: <span id="cps-boost-cost">300</span>)</button>
+  <button onclick="prestige()">Prestige for permanent bonus</button>
   <br/>
   <button onclick="resetGame()">Reset Game</button>
 
   <script>
     let coins = 0;
     let coinsPerSecond = 0;
+    let totalCoins = 0;
     let upgradeCost = 50;
-    let upgradeCost2 = 150;  // New upgrade cost
+    let upgradeCost2 = 150;
     let lastSaveTime = Date.now();
+    let prestigePoints = 0;
 
     let autoClickerCost = 100;
     let autoClickerActive = false;
@@ -72,36 +74,42 @@
     function loadGame() {
       const saved = JSON.parse(localStorage.getItem('idleClickerGame'));
       if (saved) {
-        coins = saved.coins || 0;
-        coinsPerSecond = saved.coinsPerSecond || 0;
-        upgradeCost = saved.upgradeCost || 50;
-        lastSaveTime = saved.lastSaveTime || Date.now();
-
-        // Offline earnings
+        Object.assign(window, saved);
         const now = Date.now();
         const secondsOffline = Math.floor((now - lastSaveTime) / 1000);
         const offlineEarnings = coinsPerSecond * secondsOffline * offlineEarningsBoost;
-
         if (offlineEarnings > 0) {
-          alert(`Welcome back! You earned ${offlineEarnings} coins while you were away.`);
+          alert(`Welcome back! You earned ${offlineEarnings} coins while away.`);
           coins += offlineEarnings;
         }
       }
     }
 
     function saveGame() {
-      const gameData = {
-        coins,
-        coinsPerSecond,
-        upgradeCost,
-        upgradeCost2,  // Save new upgrade cost
-        lastSaveTime: Date.now(),
-      };
-      localStorage.setItem('idleClickerGame', JSON.stringify(gameData));
+      localStorage.setItem('idleClickerGame', JSON.stringify({
+        coins, coinsPerSecond, upgradeCost, upgradeCost2,
+        autoClickerCost, autoClickerActive,
+        coinMultiplierCost, coinMultiplier,
+        offlineEarningsBoostCost, offlineEarningsBoost,
+        cpsBoostCost, prestigePoints, totalCoins,
+        lastSaveTime: Date.now()
+      }));
+    }
+
+    function updateDisplay() {
+      document.getElementById('coins').textContent = coins;
+      document.getElementById('cps').textContent = coinsPerSecond;
+      document.getElementById('cost').textContent = upgradeCost;
+      document.getElementById('cost2').textContent = upgradeCost2;
+      document.getElementById('auto-clicker-cost').textContent = autoClickerCost;
+      document.getElementById('coin-multiplier-cost').textContent = coinMultiplierCost;
+      document.getElementById('offline-earnings-boost-cost').textContent = offlineEarningsBoostCost;
+      document.getElementById('cps-boost-cost').textContent = cpsBoostCost;
     }
 
     function clickCoin() {
-      coins += coinMultiplier; // Apply multiplier
+      coins += coinMultiplier;
+      totalCoins += coinMultiplier;
       updateDisplay();
       saveGame();
     }
@@ -109,7 +117,7 @@
     function buyUpgrade() {
       if (coins >= upgradeCost) {
         coins -= upgradeCost;
-        coinsPerSecond += 1;  // Increase CPS by 1
+        coinsPerSecond += 1;
         upgradeCost = Math.floor(upgradeCost * 1.5);
         updateDisplay();
         saveGame();
@@ -119,7 +127,7 @@
     function buyUpgrade2() {
       if (coins >= upgradeCost2) {
         coins -= upgradeCost2;
-        coinsPerSecond += 2;  // Increase CPS by 2
+        coinsPerSecond += 2;
         upgradeCost2 = Math.floor(upgradeCost2 * 1.5);
         updateDisplay();
         saveGame();
@@ -166,24 +174,26 @@
       }
     }
 
-    function updateDisplay() {
-      document.getElementById('coins').textContent = coins;
-      document.getElementById('cps').textContent = coinsPerSecond;
-      document.getElementById('cost').textContent = upgradeCost;
-      document.getElementById('cost2').textContent = upgradeCost2; // Display the new upgrade cost
-      document.getElementById('auto-clicker-cost').textContent = autoClickerCost;
-      document.getElementById('coin-multiplier-cost').textContent = coinMultiplierCost;
-      document.getElementById('offline-earnings-boost-cost').textContent = offlineEarningsBoostCost;
-      document.getElementById('cps-boost-cost').textContent = cpsBoostCost;
+    function prestige() {
+      if (totalCoins >= 10000) {
+        prestigePoints++;
+        coins = 0;
+        coinsPerSecond = 0;
+        coinMultiplier = 1 + prestigePoints * 0.5;
+        upgradeCost = 50;
+        upgradeCost2 = 150;
+        totalCoins = 0;
+        alert("Prestige unlocked! You now earn more per click.");
+        saveGame();
+        updateDisplay();
+      } else {
+        alert("You need at least 10,000 total coins to prestige.");
+      }
     }
 
     function resetGame() {
       localStorage.removeItem('idleClickerGame');
-      coins = 0;
-      coinsPerSecond = 0;
-      upgradeCost = 50;
-      upgradeCost2 = 150;  // Reset new upgrade cost
-      updateDisplay();
+      location.reload();
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -194,13 +204,11 @@
 
     setInterval(() => {
       coins += coinsPerSecond;
+      totalCoins += coinsPerSecond;
       updateDisplay();
       saveGame();
-      if (autoClickerActive) {
-        coins += 1;
-      }
+      if (autoClickerActive) coins += 1;
     }, 1000);
   </script>
-
 </body>
 </html>
