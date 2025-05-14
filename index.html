@@ -43,6 +43,11 @@
   <div class="counter">Coins Per Second: <span id="cps">0</span></div>
 
   <button onclick="buyUpgrade()">Buy Upgrade (+1 CPS) - Cost: <span id="cost">50</span></button>
+  <button onclick="buyUpgrade2()">Buy Upgrade (+2 CPS) - Cost: <span id="cost2">150</span></button>
+  <button onclick="buyAutoClicker()">Buy Auto-Clicker (Cost: <span id="auto-clicker-cost">100</span>)</button>
+  <button onclick="buyCoinMultiplier()">Buy Coin Multiplier (Cost: <span id="coin-multiplier-cost">200</span>)</button>
+  <button onclick="buyOfflineEarningsBoost()">Buy Offline Earnings Boost (Cost: <span id="offline-earnings-boost-cost">500</span>)</button>
+  <button onclick="buyCpsBoost()">Buy CPS Boost (Cost: <span id="cps-boost-cost">300</span>)</button>
   <br/>
   <button onclick="resetGame()">Reset Game</button>
 
@@ -50,7 +55,19 @@
     let coins = 0;
     let coinsPerSecond = 0;
     let upgradeCost = 50;
+    let upgradeCost2 = 150;  // New upgrade cost
     let lastSaveTime = Date.now();
+
+    let autoClickerCost = 100;
+    let autoClickerActive = false;
+
+    let coinMultiplierCost = 200;
+    let coinMultiplier = 1;
+
+    let offlineEarningsBoostCost = 500;
+    let offlineEarningsBoost = 1;
+
+    let cpsBoostCost = 300;
 
     function loadGame() {
       const saved = JSON.parse(localStorage.getItem('idleClickerGame'));
@@ -60,10 +77,10 @@
         upgradeCost = saved.upgradeCost || 50;
         lastSaveTime = saved.lastSaveTime || Date.now();
 
-        // ⏰ Offline earnings
+        // Offline earnings
         const now = Date.now();
         const secondsOffline = Math.floor((now - lastSaveTime) / 1000);
-        const offlineEarnings = coinsPerSecond * secondsOffline;
+        const offlineEarnings = coinsPerSecond * secondsOffline * offlineEarningsBoost;
 
         if (offlineEarnings > 0) {
           alert(`Welcome back! You earned ${offlineEarnings} coins while you were away.`);
@@ -77,13 +94,14 @@
         coins,
         coinsPerSecond,
         upgradeCost,
-        lastSaveTime: Date.now()
+        upgradeCost2,  // Save new upgrade cost
+        lastSaveTime: Date.now(),
       };
       localStorage.setItem('idleClickerGame', JSON.stringify(gameData));
     }
 
     function clickCoin() {
-      coins += 1;
+      coins += coinMultiplier; // Apply multiplier
       updateDisplay();
       saveGame();
     }
@@ -91,8 +109,58 @@
     function buyUpgrade() {
       if (coins >= upgradeCost) {
         coins -= upgradeCost;
-        coinsPerSecond += 1;
+        coinsPerSecond += 1;  // Increase CPS by 1
         upgradeCost = Math.floor(upgradeCost * 1.5);
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function buyUpgrade2() {
+      if (coins >= upgradeCost2) {
+        coins -= upgradeCost2;
+        coinsPerSecond += 2;  // Increase CPS by 2
+        upgradeCost2 = Math.floor(upgradeCost2 * 1.5);
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function buyAutoClicker() {
+      if (coins >= autoClickerCost) {
+        coins -= autoClickerCost;
+        autoClickerActive = true;
+        autoClickerCost = Math.floor(autoClickerCost * 1.5);
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function buyCoinMultiplier() {
+      if (coins >= coinMultiplierCost) {
+        coins -= coinMultiplierCost;
+        coinMultiplier += 0.5;
+        coinMultiplierCost = Math.floor(coinMultiplierCost * 1.5);
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function buyOfflineEarningsBoost() {
+      if (coins >= offlineEarningsBoostCost) {
+        coins -= offlineEarningsBoostCost;
+        offlineEarningsBoost += 1;
+        offlineEarningsBoostCost = Math.floor(offlineEarningsBoostCost * 1.5);
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function buyCpsBoost() {
+      if (coins >= cpsBoostCost) {
+        coins -= cpsBoostCost;
+        coinsPerSecond += 1;
+        cpsBoostCost = Math.floor(cpsBoostCost * 1.5);
         updateDisplay();
         saveGame();
       }
@@ -102,6 +170,11 @@
       document.getElementById('coins').textContent = coins;
       document.getElementById('cps').textContent = coinsPerSecond;
       document.getElementById('cost').textContent = upgradeCost;
+      document.getElementById('cost2').textContent = upgradeCost2; // Display the new upgrade cost
+      document.getElementById('auto-clicker-cost').textContent = autoClickerCost;
+      document.getElementById('coin-multiplier-cost').textContent = coinMultiplierCost;
+      document.getElementById('offline-earnings-boost-cost').textContent = offlineEarningsBoostCost;
+      document.getElementById('cps-boost-cost').textContent = cpsBoostCost;
     }
 
     function resetGame() {
@@ -109,6 +182,7 @@
       coins = 0;
       coinsPerSecond = 0;
       upgradeCost = 50;
+      upgradeCost2 = 150;  // Reset new upgrade cost
       updateDisplay();
     }
 
@@ -122,6 +196,9 @@
       coins += coinsPerSecond;
       updateDisplay();
       saveGame();
+      if (autoClickerActive) {
+        coins += 1;
+      }
     }, 1000);
   </script>
 
