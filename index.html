@@ -209,6 +209,17 @@
       saveGame();
       if (autoClickerActive) coins += 1;
     }, 1000);
+
+    setInterval(() => {
+  coins += coinsPerSecond;
+  totalCoins += coinsPerSecond;
+  updateDisplay();
+  saveGame();
+  if (autoClickerActive) coins += 1;
+}, 1000);
+
+// Makes sure progress is saved before user closes tab
+window.addEventListener('beforeunload', saveGame);
   </script>
 </body>
 </html>
